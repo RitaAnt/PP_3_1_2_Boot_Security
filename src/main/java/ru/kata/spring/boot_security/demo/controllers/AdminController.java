@@ -13,26 +13,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import ru.kata.spring.boot_security.demo.entities.User;
 import ru.kata.spring.boot_security.demo.service.AdminService;
-import ru.kata.spring.boot_security.demo.service.RoleService;
-
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
-//    private List<User> Users = Stream.of(
-//            new User(1, "user", "user", "user@gmail.com", "ADMIN")
-//    ).collect(Collectors.toList());
+
     private final AdminService adminService;
-    private final RoleService roleService;
 
     @Autowired
-    public AdminController(AdminService adminService, RoleService roleService) {
+    public AdminController(AdminService adminService) {
         this.adminService = adminService;
-        this.roleService = roleService;
     }
 
 
@@ -50,7 +41,7 @@ public class AdminController {
 
     @GetMapping("/new")
     public String createNewUser(@ModelAttribute("user") User user, Model model) {
-        model.addAttribute("listRoles", roleService.getListRoles());
+//        model.addAttribute("listRoles", roleService.getListRoles());
         return "new";
     }
 
@@ -62,7 +53,7 @@ public class AdminController {
 
     @GetMapping("/user/{id}/edit")
     public String edit(Model model, @PathVariable("id") int id, Model roles) {
-        roles.addAttribute("listRoles", roleService.getListRoles());
+//        roles.addAttribute("listRoles", roleService.getListRoles());
         model.addAttribute("user", adminService.getUserById(id));
         return "edit";
     }
