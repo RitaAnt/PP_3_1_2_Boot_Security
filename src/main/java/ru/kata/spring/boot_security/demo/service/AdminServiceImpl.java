@@ -1,6 +1,7 @@
 package ru.kata.spring.boot_security.demo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -9,20 +10,18 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.kata.spring.boot_security.demo.entities.User;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.util.List;
 
 
 @Service
 public class AdminServiceImpl implements AdminService {
-    @PersistenceContext
-    private EntityManager entityManager;
-
+    private final EntityManager entityManager;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Autowired
-    public AdminServiceImpl(BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public AdminServiceImpl(EntityManager entityManager, @Lazy BCryptPasswordEncoder bCryptPasswordEncoder) {
+        this. entityManager = entityManager;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
     @Override
