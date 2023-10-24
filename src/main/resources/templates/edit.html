@@ -37,12 +37,10 @@
             <input type="text" th:field="*{email}" id="email"/>
         <br>
         <br>
-            <p>Roles:</p>
-                <th:block th:each="role: ${listRoles}">
-                    <input type="checkbox" th:field="*{roles}"
-                           th:text="${role.name}" th:value="${role.id}" class="m-2"/>
-                </th:block>
-
+        <th:block th:each="role: ${listRoles}">
+            <input type="checkbox" th:field="*{roles}"
+                   th:text="${role.name}" th:value="${role.id}"/>
+        </th:block>
         <br>
         <br>
         <input class="link" type="submit" value="Update"/>
