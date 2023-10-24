@@ -2,6 +2,7 @@ package ru.kata.spring.boot_security.demo.service;
 
 
 import org.springframework.security.core.userdetails.UserDetailsService;
+import ru.kata.spring.boot_security.demo.entities.Role;
 import ru.kata.spring.boot_security.demo.entities.User;
 
 import java.util.List;
@@ -18,4 +19,6 @@ public interface AdminService extends UserDetailsService {
     void deleteUser(long userId);
 
     void updateUser(long id, User update);
+
+    List<Role> getListRoles(long id);
 }

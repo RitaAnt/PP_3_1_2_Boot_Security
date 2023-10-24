@@ -41,7 +41,9 @@ public class AdminController {
 
     @GetMapping("/new")
     public String createNewUser(@ModelAttribute("user") User user, Model model) {
-//        model.addAttribute("listRoles", roleService.getListRoles());
+        if (user != null) {
+            model.addAttribute("listRoles", adminService.getListRoles(user.getId()));
+        }
         return "new";
     }
 
@@ -53,7 +55,7 @@ public class AdminController {
 
     @GetMapping("/user/{id}/edit")
     public String edit(Model model, @PathVariable("id") int id, Model roles) {
-//        roles.addAttribute("listRoles", roleService.getListRoles());
+        roles.addAttribute("listRoles", adminService.getListRoles(id));
         model.addAttribute("user", adminService.getUserById(id));
         return "edit";
     }
