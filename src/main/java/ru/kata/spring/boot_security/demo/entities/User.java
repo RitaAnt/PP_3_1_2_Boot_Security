@@ -1,26 +1,18 @@
 package ru.kata.spring.boot_security.demo.entities;
 
 
+import org.hibernate.annotations.Cascade;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 
 @Entity
-@Table(name = "user")
+@Table(name = "user", uniqueConstraints = @UniqueConstraint(columnNames = "username"))
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,6 +28,7 @@ public class User implements UserDetails {
     @JoinTable(name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
+    @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
     private List<Role> roles;
 
     public User() {
@@ -124,5 +117,17 @@ public class User implements UserDetails {
                 ", password='" + password + '\'' +
                 ", email='" + email + '\'' +
                 '}';
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return id == user.id && Objects.equals(username, user.username);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, username);
     }
 }
