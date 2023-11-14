@@ -10,7 +10,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import ru.kata.spring.boot_security.demo.entities.Role;
 import ru.kata.spring.boot_security.demo.entities.User;
-import ru.kata.spring.boot_security.demo.service.AdminService;
+import ru.kata.spring.boot_security.demo.service.RoleService;
+import ru.kata.spring.boot_security.demo.service.UserService;
 
 import java.util.Arrays;
 
@@ -19,12 +20,14 @@ import java.util.Arrays;
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final SuccessUserHandler successUserHandler;
-    private final AdminService adminService;
+    private final UserService userService;
+    private final RoleService roleService;
 
     @Autowired
-    public WebSecurityConfig(SuccessUserHandler successUserHandler, AdminService adminService) {
+    public WebSecurityConfig(SuccessUserHandler successUserHandler,  UserService userService, RoleService roleService) {
         this.successUserHandler = successUserHandler;
-        this.adminService = adminService;
+        this.userService = userService;
+        this.roleService = roleService;
     }
 
     @Override
@@ -48,39 +51,44 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         // Добавляем инициализацию данных при старте приложения
         initRolesAndUsers();
     }
+    @Bean
+    public RoleService roleService() {
+        return roleService;
+    }
+
+
 
     private void initRolesAndUsers() {
         Role roleAdmin = new Role("ROLE_ADMIN");
         Role roleUser = new Role("ROLE_USER");
 
         // Сохраняем роли в базу данных
-        if (adminService.getRoleByName("ROLE_ADMIN") == null) {
-            adminService.saveRole(roleAdmin);
+        if (roleService.getRoleByName("ROLE_ADMIN") == null) {
+            roleService.saveRole(roleAdmin);
         }
-        if (adminService.getRoleByName("ROLE_ADMIN") == null) {
-            adminService.saveRole(roleUser);
+        if (roleService.getRoleByName("ROLE_USER") == null) {
+            roleService.saveRole(roleUser);
         }
 
         // Создаем пользователя
         User user = new User();
         user.setUsername("admin");
-        user.setPassword(adminService.getBCryptPasswordEncoder().encode("admin"));
+        user.setPassword(userService.getBCryptPasswordEncoder().encode("admin"));
         user.setEmail("admin@example.com");
         user.setRoles(Arrays.asList(roleAdmin, roleUser));
 
         // Сохраняем пользователя в базу данных
-        adminService.saveUser(user);
-
+        userService.saveUser(user);
 
         // Создаем пользователя
         User user2 = new User();
         user2.setUsername("user");
-        user2.setPassword(adminService.getBCryptPasswordEncoder().encode("user"));
+        user2.setPassword(userService.getBCryptPasswordEncoder().encode("user"));
         user2.setEmail("user@example.com");
         user2.setRoles(Arrays.asList(roleUser));
 
         // Сохраняем пользователя в базу данных
-        adminService.saveUser(user2);
+        userService.saveUser(user2);
     }
 
     @Bean
@@ -95,4 +103,5 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         authenticationProvider.setUserDetailsService(adminService);
         return authenticationProvider;
     }
+
 }

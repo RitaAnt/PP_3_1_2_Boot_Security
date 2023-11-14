@@ -1,34 +1,56 @@
 package ru.kata.spring.boot_security.demo.controllers;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import ru.kata.spring.boot_security.demo.entities.User;
-import ru.kata.spring.boot_security.demo.service.AdminService;
+import ru.kata.spring.boot_security.demo.service.UserService;
 
+import java.util.List;
 
-import java.security.Principal;
-
-@Controller
+@RestController
+@RequestMapping("/api/users")
 public class UserController {
 
-    private final AdminService adminService;
+    private final UserService userService;
 
     @Autowired
-    public UserController(AdminService adminService) {
-        this.adminService = adminService;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    @GetMapping("/user")
-    public String showUser(Model model, Principal principal) {
-        User user = adminService.getUserByName(principal.getName());
-        if (user == null) {
-            throw new UsernameNotFoundException("User not found");
+    @GetMapping
+    public List<User> getAllUsers() {
+        return userService.getAllUsers();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        User user = userService.getUserById(id);
+        return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createUser(@RequestBody User user) {
+        userService.saveUser(user);
+        return ResponseEntity.ok("User created successfully");
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User user) {
+        User existingUser = userService.getUserById(id);
+        if (existingUser != null) {
+            user.setId(id);
+            userService.saveUser(user);
+            return ResponseEntity.ok("User updated successfully");
+        } else {
+            return ResponseEntity.notFound().build();
         }
-        model.addAttribute("user", user);
-        return "user";
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok("User deleted successfully");
     }
 }

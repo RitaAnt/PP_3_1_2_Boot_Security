@@ -1,76 +1,71 @@
 package ru.kata.spring.boot_security.demo.controllers;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import ru.kata.spring.boot_security.demo.dao.UserWithRolesDAO;
+import ru.kata.spring.boot_security.demo.entities.Role;
 import ru.kata.spring.boot_security.demo.entities.User;
-import ru.kata.spring.boot_security.demo.service.AdminService;
+import ru.kata.spring.boot_security.demo.service.UserService;
 
+import java.util.List;
+import java.util.stream.Collectors;
 
-@Controller
-@RequestMapping("/admin")
+@RestController
+@RequestMapping("/api/admin")
 public class AdminController {
 
-    private final AdminService adminService;
+    private final UserService userService;
 
     @Autowired
-    public AdminController(AdminService adminService) {
-        this.adminService = adminService;
-    }
-
-
-    @GetMapping("/user")
-    public String getUsers(Model model) {
-        model.addAttribute("users", adminService.getUsers());
-        return "users";
-    }
-
-    @GetMapping("/user/{id}")
-    public String getUserById(@PathVariable("id") int id, Model model) {
-        model.addAttribute("user", adminService.getUserById(id));
-        return "user";
-    }
-
-    @GetMapping("/new")
-    public String createNewUser(@ModelAttribute("user") User user, Model model) {
-        if (user != null) {
-            model.addAttribute("listRoles", adminService.getListRoles(user.getId()));
-        }
-        return "new";
+    public AdminController(UserService userService) {
+        this.userService = userService;
     }
 
     @PostMapping("/user")
-    public String create(@ModelAttribute("user") User user) {
-        adminService.addUser(user);
-        return "redirect:/admin/user";
+    public ResponseEntity<?> saveOrUpdateUser(@RequestBody UserWithRolesDAO userWithRolesDAO) {
+        // Переносим изменения из UserWithRolesDAO в сущность User
+        User user = userWithRolesDAO.getUser();
+        // Обновляем роли пользователя
+        user.setRoles(userWithRolesDAO.getRoles()
+                .stream()
+                .filter(Role::isSelected)
+                .collect(Collectors.toList()));
+
+        userService.saveUser(user);
+
+        return ResponseEntity.ok("User saved successfully");
     }
 
-    @GetMapping("/user/{id}/edit")
-    public String edit(Model model, @PathVariable("id") int id, Model roles) {
-        roles.addAttribute("listRoles", adminService.getListRoles(id));
-        model.addAttribute("user", adminService.getUserById(id));
-        return "edit";
+    @GetMapping("/users")
+    public List<User> getAllUsers() {
+        return userService.getAllUsers();
     }
 
-    @PatchMapping("/user/{id}")
-    public String updateUser(@ModelAttribute("user") User user, @PathVariable("id") int id) {
-        adminService.updateUser(id, user);
-        return "redirect:/admin/user";
+    @GetMapping("/user/{id}")
+    public ResponseEntity<UserWithRolesDAO> getUserById(@PathVariable Long id) {
+        User user = userService.getUserById(id);
+
+        if (user != null) {
+            // Преобразуем пользователя и его роли в UserWithRolesDAO для передачи на фронт
+            UserWithRolesDAO userWithRolesDAO = new UserWithRolesDAO();
+            userWithRolesDAO.setUser(user);
+            userWithRolesDAO.setRoles(userService.getAllRoles()); // Передаем все роли, чтобы админ мог выбрать
+
+            // Устанавливаем флаг isSelected в true для ролей, которые у пользователя уже есть
+            for (Role role : userWithRolesDAO.getRoles()) {
+                role.setSelected(user.getRoles().contains(role));
+            }
+
+            return ResponseEntity.ok(userWithRolesDAO);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    @DeleteMapping("/{id}")
-    public String deleteUser(@PathVariable("id") int id) {
-        adminService.deleteUser(id);
-        return "redirect:/admin/user";
+    @DeleteMapping("/user/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok("User deleted successfully");
     }
-
 }
-
